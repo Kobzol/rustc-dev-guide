@@ -14,7 +14,7 @@ const UPSTREAM_REPO: &str = "kobzol/rust";
 pub struct GitSync {
     dir: PathBuf,
 }
-
+// FOO
 /// This code was adapted from the miri repository
 /// (https://github.com/rust-lang/miri/blob/6a68a79f38064c3bc30617cca4bdbfb2c336b140/miri-script/src/commands.rs#L236).
 impl GitSync {
