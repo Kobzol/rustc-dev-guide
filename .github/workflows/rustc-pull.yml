@@ -40,6 +40,15 @@ jobs:
           git push -u origin $BRANCH --force
       - name: Create pull request
         run: |
-          gh pr create -B master --title 'Rustc pull update' --body 'Latest update from rustc.'
+          # Check if an open pull request for an rustc pull update already exists
+          # If it does, the previous push has just updated it
+          # If not, we create it now
+          RESULT=`gh pr list --author github-actions[bot] --state open -q 'map(select(.title=="Rustc pull update")) | length' --json title`
+          if [[ "$RESULT" -eq 0 ]]; then
+            echo "Creating new pull request"
+            gh pr create -B master --title 'Rustc pull update' --body 'Latest update from rustc.'
+          else
+            echo "Updated existing pull request"
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
