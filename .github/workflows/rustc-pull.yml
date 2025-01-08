@@ -34,6 +34,7 @@ jobs:
         run: cargo run --manifest-path josh-sync/Cargo.toml -- rustc-pull
       - name: Push changes to a branch
         run: |
+          # Update a sticky branch that is used for rustc pulls
           BRANCH="rustc-pull"
           git switch -c $BRANCH
           git push -u origin $BRANCH --force
