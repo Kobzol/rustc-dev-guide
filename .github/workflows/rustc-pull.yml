@@ -1,6 +1,7 @@
 name: rustc-pull
 
 on:
+  pull_request:
   workflow_dispatch:
   schedule:
     # Run at 04:00 UTC every Monday
@@ -10,6 +11,8 @@ jobs:
   pull:
     if: github.repository == 'rust-lang/rustc-dev-guide'
     runs-on: ubuntu-latest
+    outputs:
+      message: ${{ steps.update-pr.outputs.message }}
     permissions:
       contents: write
       pull-requests: write
@@ -40,6 +43,7 @@ jobs:
           git switch -c $BRANCH
           git push -u origin $BRANCH --force
       - name: Create pull request
+        id: update-pr
         run: |
           # Check if an open pull request for an rustc pull update already exists
           # If it does, the previous push has just updated it
@@ -53,3 +57,40 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  base:
+    runs-on: ubuntu-latest
+    outputs:
+      message: ${{ steps.update-pr.outputs.message }}
+    steps:
+      - name: Step 1
+        run: exit 1
+      - name: Update PR
+        id: update-pr
+        run: echo "message=M1" >> "$GITHUB_OUTPUT"
+  send-zulip-message:
+    needs: [base]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compute message
+        id: message
+        run: |
+          if [ "${{ needs.base.result }}" == "failure" ];
+          then
+            MESSAGE="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "message=Rustc pull sync has failed. Check out the [workflow URL]($MESSAGE)." >> $GITHUB_OUTPUT;
+          else
+            echo "message=FOO" >> $GITHUB_OUTPUT;
+          fi
+      - name: Print message
+        run: echo "${{ steps.message.outputs.message }}"
+#      - name: Send a Zulip message about updated PR
+#        uses: zulip/github-actions-zulip/send-message@e4c8f27c732ba9bd98ac6be0583096dea82feea5
+#        with:
+#          api-key: ${{ secrets.ZULIP_API_TOKEN }}
+#          email: "rustc-dev-guide-gha-notif-bot@rust-lang.zulipchat.com"
+#          organization-url: "https://rust-lang.zulipchat.com"
+#          to: 196385
+#          type: "stream"
+#          topic: "Subtree sync automation"
+#          content: ${{ steps.message.outputs.message }}
