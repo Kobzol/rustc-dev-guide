@@ -8,5 +8,11 @@ on:
   pull_request:
 
 jobs:
-  call-workflow-in-another-repo:
-    uses: kobzol/josh-sync/.github/workflows/ci-pull.yml@v1
+  pull:
+    uses: kobzol/josh-sync/.github/workflows/rustc-pull.yml@master
+#    with:
+#      zulip-stream-id: 1
+#      zulip-bot-email: bot@bot.com
+    secrets:
+      zulip-api-token: FOO
+      token: ${{ secrets.GITHUB_TOKEN }}
